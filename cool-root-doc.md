@@ -29,26 +29,27 @@ graph TD
     end
 ```
 ## Main sequence diagram
-```sequenceDiagram
+```
+sequenceDiagram
     participant User
     participant LendingPool (L2Pool)
     participant AToken
     participant DebtToken
     participant AaveOracle
 
-    User ->> LendingPool (L2Pool): deposit(asset, amount)
+    User->>LendingPool (L2Pool): deposit(asset, amount)
     LendingPool (L2Pool) ->> AToken: mint(amount, user)
     
-    User ->> LendingPool (L2Pool): borrow(asset, amount)
+    User->>LendingPool (L2Pool): borrow(asset, amount)
     LendingPool (L2Pool) ->> AaveOracle: getPrice(asset)
     AaveOracle -->> LendingPool (L2Pool): assetPrice
     LendingPool (L2Pool) ->> DebtToken: mint(amount, user)
     
-    User ->> LendingPool (L2Pool): repay(asset, amount)
+    User->>LendingPool (L2Pool): repay(asset, amount)
     LendingPool (L2Pool) ->> DebtToken: burn(amount, user)
     
-    User ->> LendingPool (L2Pool): withdraw(asset, amount)
-    LendingPool (L2Pool) ->> AToken: burn(amount, user)
+    User->>LendingPool (L2Pool): withdraw(asset, amount)
+    LendingPool (L2Pool)->>AToken: burn(amount, user)
 ```
 
 ## Deploy Scripts
