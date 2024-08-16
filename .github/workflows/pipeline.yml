@@ -12,7 +12,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     
     - name: Setup Node
       uses: actions/setup-node@v4
@@ -21,22 +21,22 @@ jobs:
 
     - name: Install pandoc
       run: |
-        sudo apt-get install -y pandoc texlive-latex-recommended \
+        sudo apt-get install -y pandoc texlive-latex-recommended texlive-xetex \
           texlive-pictures texlive-latex-extra texlive-fonts-recommended
         npm i -g mermaid-filter
 
     - name: install mermaid-filter and Convert Markdown to PDF
       run: |
-        pandoc -F mermaid-filter cool-root-doc.md -o cool-root-doc.pdf 
-        #         pip install pandoc-mermaid-filter
-        # for file in $(find . -name '*.md'); do
-        #   pdf_file="${file%.md}.pdf"
-        #   pandoc --filter=pandoc-mermaid-filter "$file" -o "$pdf_file" --pdf-engine=xelatex
-        # done
+        pandoc -F mermaid-filter cool-root-doc.md -o cool-root-doc.pdf --pdf-engine=xelatex
+                pip install pandoc-mermaid-filter
+        for file in $(find . -name '*.md'); do
+          pdf_file="${file%.md}.pdf"
+          pandoc -F mermaid-filter cool-root-doc.md -o cool-root-doc.pdf 
+        done
 
 
     - name: Upload PDFs as artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: converted-pdfs
         path: '**/*.pdf'
