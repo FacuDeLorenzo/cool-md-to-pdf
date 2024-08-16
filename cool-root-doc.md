@@ -29,7 +29,7 @@ graph TD
     end
 ```
 ## Main sequence diagram
-```sequence
+```sequenceDiagram
     participant User
     participant LendingPool (L2Pool)
     participant AToken
