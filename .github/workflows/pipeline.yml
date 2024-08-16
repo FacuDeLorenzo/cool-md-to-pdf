@@ -14,25 +14,14 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.x'
-
-    - name: Install pandoc and dependencies
+    - name: Install pandoc
       run: |
         sudo apt-get install -y pandoc texlive-xetex
+        npm install -g @mermaid-js/mermaid-cli
+
+    - name: install mermaid-filter and Convert Markdown to PDF
+      run: |
         pip install pandoc-mermaid-filter
-
-    - name: Ensure pandoc-mermaid-filter is in PATH
-      run: |
-        export PATH="$PATH:$(python -m site --user-base)/bin"
-        echo "Checking pandoc-mermaid-filter location:"
-        which pandoc-mermaid-filter || { echo "pandoc-mermaid-filter not found"; exit 1; }
-
-    - name: Convert Markdown to PDF
-      run: |
-        export PATH="$PATH:$(python -m site --user-base)/bin"
         for file in $(find . -name '*.md'); do
           pdf_file="${file%.md}.pdf"
           pandoc --filter=pandoc-mermaid-filter "$file" -o "$pdf_file" --pdf-engine=xelatex
