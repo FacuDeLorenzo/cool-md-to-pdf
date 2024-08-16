@@ -14,10 +14,14 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Install pandoc and mermaid-filter
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+
+    - name: Install pandoc and dependencies
       run: |
         sudo apt-get install -y pandoc texlive-xetex
-        npm install -g @mermaid-js/mermaid-cli
         pip install pandoc-mermaid-filter
 
     - name: Check pandoc-mermaid-filter installation
