@@ -13,19 +13,28 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
+    
+    - name: Setup Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
 
     - name: Install pandoc
       run: |
-        sudo apt-get install -y pandoc texlive-xetex
-        npm install -g @mermaid-js/mermaid-cli
+        sudo apt-get install -y pandoc texlive-latex-recommended \
+          texlive-pictures texlive-latex-extra texlive-fonts-recommended
+        npm i -g mermaid-filter
 
     - name: install mermaid-filter and Convert Markdown to PDF
       run: |
-        pip install pandoc-mermaid-filter
-        for file in $(find . -name '*.md'); do
-          pdf_file="${file%.md}.pdf"
-          pandoc --filter=pandoc-mermaid-filter "$file" -o "$pdf_file" --pdf-engine=xelatex
-        done
+        pandoc -F mermaid-filter cool-root-doc.md -o cool-root-doc.pdf 
+        #         pip install pandoc-mermaid-filter
+        # for file in $(find . -name '*.md'); do
+        #   pdf_file="${file%.md}.pdf"
+        #   pandoc --filter=pandoc-mermaid-filter "$file" -o "$pdf_file" --pdf-engine=xelatex
+        # done
+
 
     - name: Upload PDFs as artifacts
       uses: actions/upload-artifact@v3
