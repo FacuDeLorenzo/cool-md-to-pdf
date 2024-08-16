@@ -28,11 +28,10 @@ jobs:
     - name: install mermaid-filter and Convert Markdown to PDF
       run: |
         pandoc -F mermaid-filter cool-root-doc.md -o cool-root-doc.pdf --pdf-engine=xelatex
-                pip install pandoc-mermaid-filter
-        for file in $(find . -name '*.md'); do
-          pdf_file="${file%.md}.pdf"
-          pandoc -F mermaid-filter cool-root-doc.md -o cool-root-doc.pdf 
-        done
+        # for file in $(find . -name '*.md'); do
+        #   pdf_file="${file%.md}.pdf"
+        #   pandoc -F mermaid-filter cool-root-doc.md -o cool-root-doc.pdf --pdf-engine=xelatex
+        # done
 
 
     - name: Upload PDFs as artifacts

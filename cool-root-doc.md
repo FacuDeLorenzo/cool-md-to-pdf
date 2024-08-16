@@ -28,7 +28,6 @@ graph TD
         ACLManager --> L2Pool
     end
 ```
-
 ## Main sequence diagram
 ```sequence
     participant User
