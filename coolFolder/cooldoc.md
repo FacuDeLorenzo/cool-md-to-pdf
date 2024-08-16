@@ -845,6 +845,7 @@ These adapters enable the Aave protocol to interact with ParaSwap, a DEX aggrega
 
 ### After deploy
 
+
 This script is designed to execute a series of post-deployment tasks after the Aave protocol contracts have been deployed. These tasks include reviewing and setting up key protocol parameters, such as stable borrow rates, rate strategies, debt ceilings, isolation mode, e-modes, and liquidation fees. Additionally, the script handles testnet-specific tasks and can transfer ownership of the protocol if required.
 
 #### Tasks

@@ -22,17 +22,13 @@ jobs:
     - name: Install pandoc and dependencies
       run: |
         sudo apt-get install -y pandoc texlive-xetex
-        sudo pip install pandoc-mermaid-filter
-        echo "Installed packages:"
-        pip list
+        pip install pandoc-mermaid-filter
 
-    - name: Debug PATH
+    - name: Ensure pandoc-mermaid-filter is in PATH
       run: |
-        pip list
-        echo "Current PATH:"
-        echo $PATH
-        echo "Checking pandoc-mermaid-filter installation location:"
-        find $(python -m site --user-base) -name pandoc-mermaid-filter
+        export PATH="$PATH:$(python -m site --user-base)/bin"
+        echo "Checking pandoc-mermaid-filter location:"
+        which pandoc-mermaid-filter || { echo "pandoc-mermaid-filter not found"; exit 1; }
 
     - name: Convert Markdown to PDF
       run: |
