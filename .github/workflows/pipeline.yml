@@ -1,0 +1,34 @@
+name: Convert Markdown with Mermaid to PDF
+
+on:
+  push:
+    paths:
+      - '**/*.md'
+  workflow_dispatch:
+
+jobs:
+  convert_md_to_pdf:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Install pandoc and mermaid-filter
+      run: |
+        sudo apt-get install -y pandoc texlive-xetex
+        npm install -g @mermaid-js/mermaid-cli
+        pip install pandoc-mermaid-filter
+
+    - name: Convert Markdown to PDF
+      run: |
+        for file in $(find . -name '*.md'); do
+          pdf_file="${file%.md}.pdf"
+          pandoc --filter=pandoc-mermaid-filter "$file" -o "$pdf_file" --pdf-engine=xelatex
+        done
+
+    - name: Upload PDFs as artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: converted-pdfs
+        path: '**/*.pdf'
