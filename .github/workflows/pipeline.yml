@@ -20,6 +20,9 @@ jobs:
         npm install -g @mermaid-js/mermaid-cli
         pip install pandoc-mermaid-filter
 
+    - name: Check pandoc-mermaid-filter installation
+      run: which pandoc-mermaid-filter
+      
     - name: Convert Markdown to PDF
       run: |
         for file in $(find . -name '*.md'); do
