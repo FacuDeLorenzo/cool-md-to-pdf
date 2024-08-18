@@ -20,16 +20,13 @@ jobs:
         node-version: 20
 
     - name: Install markdown-it and markdown-it-mermaid
-      run: |
-        npm install -g markdown-it-cli
-        npm install markdown-it markdown-it-mermaid
+      run: npm install markdown-it markdown-it-mermaid 
 
     - name: Convert Markdown to HTML
-      run: |
-        npx markdown-it cool-root-doc.md --use=markdown-it-mermaid > cool-root-doc.html
+      run: node convert-md-to-html.js
 
     - name: Upload HTML file as an artifact
       uses: actions/upload-artifact@v3
       with:
         name: html-file
-        path: README.html
+        path: cool-root-doc.html
