@@ -8,6 +8,7 @@ This document aims to summarize each task within Aave's smart contract architect
 - Staking.
 - Paraswap.
 
+
 ## Core components diagram
 ![diagram](./cool-root-doc-1.svg)
 ## Main sequence diagram
