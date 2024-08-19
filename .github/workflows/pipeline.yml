@@ -24,12 +24,17 @@ jobs:
 
       - name: Display changed Markdown files
         run: |
+          ${{ github.event.before }}
+          ${{ github.sha }}
+          MODIFIED_FILES2=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
+          $MODIFIED_FILES2
+          MODIFIED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
           echo "The following Markdown files were changed:"
-          git diff --name-only HEAD | grep '\.md$'
+          $MODIFIED_FILES
 
       - name: Process changed Markdown files
         run: |
-          CHANGED_FILES=$(git diff --name-only HEAD | grep '\.md$')
+          CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
           for file in $CHANGED_FILES; do
             FOLDER_NAME=$(basename $(dirname $file))
             echo "Processing file $file in folder $FOLDER_NAME..."
