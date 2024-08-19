@@ -24,14 +24,9 @@ jobs:
 
       - name: Display changed Markdown files
         run: |
-          ${{ github.event.before }}
-          ${{ github.sha }}
-          MODIFIED_FILES2=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
-          $MODIFIED_FILES2
-          MODIFIED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
           echo "The following Markdown files were changed:"
-          $MODIFIED_FILES
-
+          git diff --name-only ${{ github.event.before }} ${{ github.sha }}
+          
       - name: Process changed Markdown files
         run: |
           CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})

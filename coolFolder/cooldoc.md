@@ -7,6 +7,7 @@ This document aims to summarize each task within Aave's smart contract architect
 - Staking.
 - Paraswap.
 
+
 ## Core components diagram
 ```mermaid
 graph TD
