@@ -1,0 +1,12 @@
+{
+  "name": "markdown-mermaid-converter",
+  "version": "1.0.0",
+  "description": "A tool to convert Markdown with Mermaid diagrams into HTML.",
+  "main": "convert-md-to-html.js",
+  "type": "module",
+  "dependencies": {
+    "md-to-pdf": "5.2.4",
+    "mermaid": "10.9.1"
+  },
+  "license": "MIT"
+}

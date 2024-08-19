@@ -3,7 +3,7 @@ name: Convert Markdown with Mermaid to PDF
 on:
   push:
     paths:
-      - '**/*.md'
+      - "**/*.md"
   workflow_dispatch:
 
 jobs:
@@ -11,22 +11,34 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Setup Node
-      uses: actions/setup-node@v4
-      with:
-        node-version: 20
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Install markdown-it and markdown-it-mermaid
-      run: npm install markdown-it markdown-it-mermaid 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
-    - name: Convert Markdown to HTML
-      run: node convert-md-to-html.js
+      - name: Install dependencies
+        run: npm install
 
-    - name: Upload HTML file as an artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: html-file
-        path: cool-root-doc.html
+      - name: Display changed Markdown files
+        run: |
+          echo "The following Markdown files were changed:"
+          git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '\.md$'
+
+      - name: Process changed Markdown files
+        run: |
+          CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '\.md$')
+          for file in $CHANGED_FILES; do
+            FOLDER_NAME=$(basename $(dirname $file))
+            echo "Processing file $file in folder $FOLDER_NAME..."
+            mmdc -i $file -o $file # Override the same file
+            md-to-pdf $file # Convert the file to PDF
+          done
+
+      - name: Upload HTML file as an artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: pdf-files
+          path: "**/*.pdf"

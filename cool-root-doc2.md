@@ -9,19 +9,81 @@ This document aims to summarize each task within Aave's smart contract architect
 - Paraswap.
 
 ## Core components diagram
-![diagram](./cool-root-doc-1.svg)
+```mermaid
+graph TD
+    subgraph Core
+        L2Pool
+        PoolConfigurator --> L2Pool
+        PoolAddressesProvider --> L2Pool
+        PoolCollateralManager --> L2Pool
+        AaveOracle --> L2Pool
+    end
+
+    subgraph Token
+        L2Pool --> AToken
+        L2Pool --> DebtToken
+    end
+
+    subgraph Governance
+        ACLManager --> L2Pool
+    end
+```
 ## Main sequence diagram
-![diagram](./cool-root-doc-2.svg)
+```mermaid
+sequenceDiagram
+    participant User
+    participant LendingPool (L2Pool)
+    participant AToken
+    participant DebtToken
+    participant AaveOracle
+
+    User->>LendingPool (L2Pool): deposit(asset, amount)
+    LendingPool (L2Pool) ->> AToken: mint(amount, user)
+    
+    User->>LendingPool (L2Pool): borrow(asset, amount)
+    LendingPool (L2Pool) ->> AaveOracle: getPrice(asset)
+    AaveOracle -->> LendingPool (L2Pool): assetPrice
+    LendingPool (L2Pool) ->> DebtToken: mint(amount, user)
+    
+    User->>LendingPool (L2Pool): repay(asset, amount)
+    LendingPool (L2Pool) ->> DebtToken: burn(amount, user)
+    
+    User->>LendingPool (L2Pool): withdraw(asset, amount)
+    LendingPool (L2Pool)->>AToken: burn(amount, user)
+```
 
 ## Deploy Scripts
 
-![diagram](./cool-root-doc-3.svg)
+```mermaid
+graph TD
+    subgraph Core
+        Pool
+        PoolConfigurator --> Pool
+        PoolAddressesProvider --> Pool
+        AaveOracle --> Pool
+        ACLManager --> Pool
+    end
+
+    subgraph Token
+        Pool --> AToken
+        Pool --> StableDebtToken
+        Pool --> VariableDebtToken
+    end 
+```
 
 ### Core
 
 #### 00_markets_registry
 
-![diagram](./cool-root-doc-4.svg)
+```mermaid
+graph TD
+    subgraph Deployment
+        PoolAddressesProviderRegistry
+    end
+
+    deployer --> PoolAddressesProviderRegistry
+    PoolAddressesProviderRegistry --> addressesProviderRegistryOwner
+```
 
 
 1. deploys a contract called `PoolAddressesProviderRegistry`.
@@ -33,7 +95,29 @@ This contract is essential for maintaining the integrity and organization of the
 
 #### 01_logic_libraries
 
-![diagram](./cool-root-doc-5.svg)
+```mermaid
+graph TD
+    subgraph Script_LogicLibraries_Deployment
+        SupplyLogic
+        BorrowLogic
+        LiquidationLogic
+        EModeLogic
+        BridgeLogic
+        ConfiguratorLogic
+        FlashLoanLogic
+        PoolLogic
+    end
+
+    deployer --> SupplyLogic
+    deployer --> BorrowLogic
+    deployer --> LiquidationLogic
+    deployer --> EModeLogic
+    deployer --> BridgeLogic
+    deployer --> ConfiguratorLogic
+    deployer --> FlashLoanLogic
+    deployer --> PoolLogic
+    FlashLoanLogic --> BorrowLogic
+```
 
 
 This deployment script is designed to deploy various key logic libraries that are essential for the operation of the Aave V3 protocol. These libraries handle different aspects of the protocol's logic, such as supply, liquidation, lending, etc.
@@ -72,7 +156,20 @@ export const BobConfig: IAaveConfiguration = {
 
 #### Contracts
 
-![diagram](./cool-root-doc-6.svg)
+```mermaid
+graph TD
+    subgraph Script_Treasury_Deployment
+        TreasuryProxy
+        TreasuryController
+        TreasuryImplementation
+    end
+
+    deployer --> TreasuryProxy
+    deployer --> TreasuryController
+    deployer --> TreasuryImplementation
+    TreasuryProxy --> TreasuryImplementation
+    TreasuryProxy --> TreasuryController
+```
 
 
 1. Deploy Treasury proxy
@@ -87,7 +184,25 @@ export const BobConfig: IAaveConfiguration = {
 
 #### 00_token_setup
 
-![diagram](./cool-root-doc-7.svg)
+```mermaid
+graph TD
+    subgraph Script_TestnetSetup
+        FaucetOwnable["FaucetOwnable (SC)"]
+        TestnetERC20["Testnet ERC20 Tokens (SC)"]
+        RewardTokens["Testnet Reward Tokens (SC)"]
+        StkAaveProxy["StkAave Proxy (SC)"]
+        StkAave["StkAave Implementation (SC)"]
+    end
+
+    deployer["Deployer (Wallet)"] --> FaucetOwnable
+    deployer --> TestnetERC20
+    deployer --> RewardTokens
+    deployer --> StkAaveProxy
+    StkAaveProxy --> StkAave
+
+    FaucetOwnable --> TestnetERC20
+    FaucetOwnable --> RewardTokens
+```
 
 This script is focused on deploying and setting up testnet tokens, reward tokens, and the StkAAVE staking contract for a specific market within the Aave protocol. It's designed to handle configurations for different networks, particularly for testnets, where mock tokens and rewards need to be set up for testing purposes.
 
@@ -114,7 +229,24 @@ export const BobConfig: IAaveConfiguration = {
 
 #### 01_price_aggregators_setup
 
-![diagram](./cool-root-doc-8.svg)
+```mermaid
+graph TD
+    subgraph Script_MockPriceAggregators_Deployment
+        MockAggregator["MockAggregator (SC)"]
+    end
+
+    deployer["Deployer (Wallet)"] --> MockAggregator
+
+    subgraph Aggregators
+        AAVEAggregator["AAVE MockAggregator (SC)"]
+        StkAaveAggregator["StkAave MockAggregator (SC)"]
+        OtherAggregators["Other MockAggregators (SC)"]
+    end
+
+    MockAggregator --> AAVEAggregator
+    MockAggregator --> StkAaveAggregator
+    MockAggregator --> OtherAggregators
+```
 
 This script is focused on deploying mock price aggregators for a testnet environment, which are essential for simulating the price feeds that the Aave protocol relies on in a production environment. These mock aggregators will return fixed prices for various assets, allowing the protocol to function as if it were on a live network.
 
@@ -140,7 +272,16 @@ This part of the script is crucial as it ensures that each asset and reward toke
 
 #### 00_setup_addresses_provider
 
-![diagram](./cool-root-doc-9.svg)
+```mermaid
+graph TD
+    subgraph Script_PoolAddressesProvider_Deployment
+        PoolAddressesProvider["PoolAddressesProvider (SC)"]
+        AaveProtocolDataProvider["AaveProtocolDataProvider (SC)"]
+    end
+
+    deployer["Deployer (Wallet)"] --> PoolAddressesProvider
+		deployer["Deployer (Wallet)"] --> AaveProtocolDataProvider
+  ```
 
 This script is responsible for deploying and configuring the `PoolAddressesProvider` contract for a specific market in the Aave V3 protocol. 
 
@@ -160,7 +301,28 @@ This script is responsible for deploying and configuring the `PoolAddressesProvi
 
 This script is focused on deploying and initializing the common Pool contract for a specific Aave market. The Pool contract is a critical component of the Aave protocol, responsible for managing the liquidity pool where users can deposit and borrow assets. 
 
-![diagram](./cool-root-doc-10.svg)
+```mermaid
+graph TD
+    subgraph Script_PoolDeployment
+        PoolAddressesProvider["PoolAddressesProvider (SC)"]
+        Pool["Pool (SC)"]
+    end
+
+    subgraph CommonLibraries["Common Libraries"]
+        SupplyLogic["SupplyLogic (SC)"]
+        BorrowLogic["BorrowLogic (SC)"]
+        LiquidationLogic["LiquidationLogic (SC)"]
+        EModeLogic["EModeLogic (SC)"]
+        BridgeLogic["BridgeLogic (SC)"]
+        FlashLoanLogic["FlashLoanLogic (SC)"]
+        PoolLogic["PoolLogic (SC)"]
+    end
+
+    deployer["Deployer (Wallet)"] --> PoolAddressesProvider
+    deployer --> Pool
+    Pool --> PoolAddressesProvider
+    Pool -- link with --> CommonLibraries
+```
 
 1. Checks whether the current network supports L2 pools (Layer 2 scaling solutions). If it does, the deployment is skipped
 2. Deploy **Pool**
@@ -175,7 +337,30 @@ This script automates the deployment and initialization of the Pool contract in 
 
 This script is designed to deploy and initialize the L2Pool contract, which is specifically tailored for Layer 2 (L2) networks within the Aave protocol. The L2Pool contract handles liquidity pools on Layer 2 solutions, such as Optimism or Arbitrum, where different considerations apply compared to Layer 1 (L1) networks.
 
-![diagram](./cool-root-doc-11.svg)
+```mermaid
+graph TD
+    subgraph Script_L2PoolDeployment
+        PoolAddressesProvider["PoolAddressesProvider (SC)"]
+        L2Pool["L2Pool (SC)"]
+        CalldataLogic["CalldataLogic (SC)"]
+    end
+
+    subgraph CommonLibraries["Common Libraries"]
+        SupplyLogic["SupplyLogic (SC)"]
+        BorrowLogic["BorrowLogic (SC)"]
+        LiquidationLogic["LiquidationLogic (SC)"]
+        EModeLogic["EModeLogic (SC)"]
+        BridgeLogic["BridgeLogic (SC)"]
+        FlashLoanLogic["FlashLoanLogic (SC)"]
+        PoolLogic["PoolLogic (SC)"]
+    end
+
+    deployer["Deployer (Wallet)"] --> PoolAddressesProvider
+    deployer --> L2Pool
+    L2Pool --> PoolAddressesProvider
+    L2Pool --> CalldataLogic
+    L2Pool --> CommonLibraries
+```
 
 1. checks if the current network supports L2 pools
     a. if l2 disable finsihed
@@ -201,7 +386,21 @@ This script automates the deployment and initialization of the L2Pool contract, 
 
 This script is focused on deploying and initializing the PoolConfigurator contract within the Aave protocol. 
 
-![diagram](./cool-root-doc-12.svg)
+```mermaid
+graph TD
+    subgraph Script_PoolConfiguratorDeployment
+        PoolAddressesProvider["PoolAddressesProvider (SC)"]
+        PoolConfigurator["PoolConfigurator (SC)"]
+        ConfiguratorLogic["ConfiguratorLogic (SC)"]
+        ReservesSetupHelper["ReservesSetupHelper (SC)"]
+    end
+
+    deployer["Deployer (Wallet)"] --> PoolAddressesProvider
+    deployer --> PoolConfigurator
+    deployer --> ReservesSetupHelper
+    PoolConfigurator --> PoolAddressesProvider
+    PoolConfigurator --> ConfiguratorLogic
+```
 
 - **PoolConfigurator:** It is a crucial component that allows the protocol's administrators to configure and manage various parameters of the liquidity pools, such as interest rate strategies, reserve settings, and more.
 - **ReservesSetupHelper:** A helper contract used to assist in setting up reserve assets.
@@ -217,7 +416,21 @@ This script automates the deployment and initialization of the PoolConfigurator 
 
 This script is focused on deploying and configuring the ACLManager contract within the Aave protocol. The ACLManager is responsible for managing access control within the protocol, setting up roles such as the PoolAdmin, EmergencyAdmin, and others. This setup is crucial to ensure that the right administrators have the appropriate permissions to manage the protocol's operations.
 
-![diagram](./cool-root-doc-13.svg)
+```mermaid
+graph TD
+    subgraph Script_ACLManagerDeployment
+        PoolAddressesProvider["PoolAddressesProvider (SC)"]
+        ACLManager["ACLManager (SC)"]
+    end
+
+    deployer["Deployer (Wallet)"] --> PoolAddressesProvider
+    deployer --> ACLManager
+    PoolAddressesProvider --> ACLManager
+
+    ACLManager --> ACLAdmin["ACL Admin (Wallet)"]
+    ACLManager --> PoolAdmin["Pool Admin (Wallet)"]
+    ACLManager --> EmergencyAdmin["Emergency Admin (Wallet)"]
+```
 
 1. Sets the ACLAdmin in the PoolAddressesProvider, linking it to the aclAdmin account.
 2. The script deploys the ACLManager contract and connects it to the PoolAddressesProvider.
@@ -286,7 +499,17 @@ For this case, a custom oracle with all the assets will be deployed. To config t
 
 This script is focused on setting the price oracle in the Aave protocol's `PoolAddressesProvider` contract. The price oracle is a key component in DeFi protocols like Aave, providing accurate and reliable price data for the assets in the liquidity pool. The script ensures that the correct price oracle is associated with the PoolAddressesProvider.
 
-![diagram](./cool-root-doc-14.svg)
+```mermaid
+graph TD
+    subgraph Script_SetPriceOracle
+        PoolAddressesProvider["PoolAddressesProvider (SC)"]
+        AaveOracle["AaveOracle (SC)"]
+    end
+
+    deployer["Deployer (Wallet)"] --> PoolAddressesProvider
+    deployer --> AaveOracle
+    PoolAddressesProvider --> AaveOracle
+```
 
 1. Set price oracle
 
@@ -296,7 +519,27 @@ This script ensures that the correct price oracle is associated with the PoolAdd
 
 This script is designed to initialize the Pool and PoolConfigurator contracts within the Aave protocol. It handles the deployment and configuration of these critical components, which are essential for managing the liquidity pools and configuring various parameters, including flash loan premiums. The script also supports Layer 2 (L2) networks by deploying additional components when needed.
 
-![diagram](./cool-root-doc-15.svg)
+```mermaid
+graph TD
+    subgraph Script_PoolInitialization
+        PoolAddressesProvider["PoolAddressesProvider (SC)"]
+        PoolProxy["Pool Proxy (SC)"]
+        PoolConfiguratorProxy["Pool Configurator Proxy (SC)"]
+        PoolImplementation["Pool Implementation (SC)"]
+        PoolConfiguratorImplementation["Pool Configurator Implementation (SC)"]
+        L2Encoder["L2 Encoder (SC)"]
+    end
+
+    deployer["Deployer (Wallet)"] --> PoolAddressesProvider
+    deployer --> PoolImplementation
+    deployer --> PoolConfiguratorImplementation
+    deployer --> L2Encoder
+    PoolAddressesProvider --> PoolProxy
+    PoolAddressesProvider --> PoolConfiguratorProxy
+    PoolProxy --> PoolImplementation
+    PoolConfiguratorProxy --> PoolConfiguratorImplementation
+    L2Encoder --> PoolProxy
+```
 
 ```typescript
 export const BobConfig: IAaveConfiguration = {
@@ -319,7 +562,31 @@ This script is responsible for deploying and configuring the Pool and PoolConfig
 
 This script is focused on deploying and configuring the Incentives system within the Aave protocol. The Incentives system is crucial for rewarding users who interact with the protocol, such as by supplying liquidity or taking out loans. The script handles the deployment of various components like the EmissionManager, RewardsController, and different strategies for reward distribution.
 
-![diagram](./cool-root-doc-16.svg)
+```mermaid
+graph TD
+    subgraph Script_IncentivesDeployment
+        PoolAddressesProvider["PoolAddressesProvider (SC)"]
+        EmissionManager["EmissionManager (SC)"]
+        RewardsController["RewardsController (SC)"]
+        IncentivesProxy["Incentives Proxy (SC)"]
+        PullRewardsStrategy["PullRewardsTransferStrategy (SC)"]
+        StakedTokenStrategy["StakedTokenTransferStrategy (SC)"]
+    end
+
+    deployer["Deployer (Wallet)"] --> PoolAddressesProvider
+    deployer --> EmissionManager
+    deployer --> RewardsController
+    deployer --> IncentivesProxy
+    deployer --> PullRewardsStrategy
+    deployer --> StakedTokenStrategy
+
+    PoolAddressesProvider --> IncentivesProxy
+    IncentivesProxy --> RewardsController
+    EmissionManager --> RewardsController
+    EmissionManager --> IncentivesProxy
+    EmissionManager --> PullRewardsStrategy
+    EmissionManager --> StakedTokenStrategy
+```
 
 - **EmissionManager:** It is responsible for managing the distribution of rewards.
 - **RewardsController:** Manages the logic for distributing rewards to users. The contract is initialized with a zero address to prevent others from calling it improperly.
@@ -338,7 +605,26 @@ This script is crucial for setting up the incentives system within the Aave prot
 
 This script is focused on deploying and initializing several key token implementations within the Aave protocol. These tokens include AToken, DelegationAwareAToken, StableDebtToken, and VariableDebtToken, which are integral to the functioning of the Aave liquidity pools.
 
-![diagram](./cool-root-doc-17.svg)
+```mermaid
+graph TD
+    subgraph Script_TokenImplementationsDeployment
+        Pool["Pool (SC)"]
+        AToken["AToken (SC)"]
+        DelegationAwareAToken["DelegationAwareAToken (SC)"]
+        StableDebtToken["StableDebtToken (SC)"]
+        VariableDebtToken["VariableDebtToken (SC)"]
+    end
+
+    deployer --> AToken
+    deployer --> DelegationAwareAToken
+    deployer --> StableDebtToken
+    deployer --> VariableDebtToken
+
+    AToken --> Pool
+    DelegationAwareAToken --> Pool
+    StableDebtToken --> Pool
+    VariableDebtToken --> Pool
+```
 
 - **AToken:** Represents a user's stake in the Aave protocol's liquidity pools. Represents liquidity provided by users, earning interest and used as collateral.
 - **DelegationAwareAToken:** Similar to AToken, but supports governance delegation.
@@ -356,7 +642,31 @@ This script automates the deployment and initialization of key token implementat
 
 This script is designed to initialize and configure the reserves (i.e., assets) in the Aave protocol. It involves deploying rate strategies, initializing reserves with ATokens and debt tokens, and configuring these reserves according to the protocol's requirements.
 
-![diagram](./cool-root-doc-18.svg)
+```mermaid
+graph TD
+    subgraph Script_ReservesInitialization
+        PoolAddressesProvider["PoolAddressesProvider (SC)"]
+        Reserves["Reserves (SC)"]
+        RateStrategies["Rate Strategies (SC)"]
+        Treasury["Treasury (SC)"]
+        IncentivesController["IncentivesController (SC)"]
+        ATokens["ATokens (SC)"]
+        DebtTokens["Debt Tokens (SC)"]
+    end
+
+    deployer["Deployer (Wallet)"] --> PoolAddressesProvider
+    deployer --> RateStrategies
+    deployer --> Reserves
+    deployer --> Treasury
+    deployer --> IncentivesController
+    Reserves --> ATokens
+    Reserves --> DebtTokens
+    RateStrategies --> Reserves
+    Treasury --> ATokens
+    IncentivesController --> ATokens
+    IncentivesController --> DebtTokens
+
+```
 
 - **RateStrategies:** Configurations for how interest rates are managed for each reserve. The script iterates through these strategies, deploying a DefaultReserveInterestRateStrategy contract for each one. It is configurated on file `reserveConfigs`.
 
@@ -390,7 +700,17 @@ This script is critical for setting up the reserves (i.e., assets) within the Aa
 
 This script is designed to deploy a mock flash loan receiver, which is useful for testing the Aave protocol on testnet environments. Flash loans are a feature of the Aave protocol that allow users to borrow assets without collateral, provided they are returned within the same transaction. The mock flash loan receiver is used to simulate and test this functionality in a controlled environment.
 
-![diagram](./cool-root-doc-19.svg)
+```mermaid
+graph TD
+    subgraph Script_MockFlashLoanReceiverDeployment
+        PoolAddressesProvider["PoolAddressesProvider (SC)"]
+        MockFlashLoanReceiver["MockFlashLoanReceiver (SC)"]
+    end
+
+    deployer["Deployer (Wallet)"] --> PoolAddressesProvider
+    deployer --> MockFlashLoanReceiver
+    MockFlashLoanReceiver --> PoolAddressesProvider
+```
 
 - **MockFlashLoanReceiver:** The contract is deployed only in non-live (testnet) environments, simulating the behavior of a flash loan receiver.
 
@@ -404,7 +724,19 @@ This script is designed to deploy a MockFlashLoanReceiver contract in testnet en
 
 This script is designed to deploy the WrappedTokenGatewayV3 contract in the Aave protocol. The WrappedTokenGatewayV3 is responsible for handling wrapped native tokens like WETH (Wrapped Ether) in the protocol, allowing users to interact with the Aave liquidity pool using native tokens.
 
-![diagram](./cool-root-doc-20.svg)
+```mermaid
+graph TD
+    subgraph Script_WrappedTokenGatewayDeployment
+        PoolProxy["Pool Proxy (SC)"]
+        WrappedNativeToken["Wrapped Native Token (SC)"]
+        WrappedTokenGatewayV3["WrappedTokenGatewayV3 (SC)"]
+    end
+
+    deployer["Deployer (Wallet)"] --> WrappedNativeToken
+    deployer --> WrappedTokenGatewayV3
+    WrappedTokenGatewayV3 --> WrappedNativeToken
+    WrappedTokenGatewayV3 --> PoolProxy
+```
 
 1. Determines the address of the wrapped native token based on whether the deployment is for a testnet or a live network.
 2. Deploy the `WrappedTokenGatewayV3` contract.
@@ -415,7 +747,10 @@ This script automates the deployment of the WrappedTokenGatewayV3 contract, whic
 
 This script is designed to deploy the `WalletBalanceProvider` contract in the Aave protocol. 
 
-![diagram](./cool-root-doc-21.svg)
+```mermaid
+graph TD
+    deployer["Deployer (Wallet)"] --> WalletBalanceProvider["WalletBalanceProvider (SC)"]
+```
 
 - **WalletBalanceProvider:** is typically used to retrieve wallet balances for multiple tokens in a single call, which is useful for efficiently checking user balances across different assets.
 
@@ -423,7 +758,14 @@ This script is designed to deploy the `WalletBalanceProvider` contract in the Aa
 
 This script is designed to deploy two utility contracts, UiIncentiveDataProviderV3 and UiPoolDataProviderV3, which are used to fetch and display data about the Aave protocol’s pools and incentives. These contracts provide an interface to query data, making it easier for front-end applications to retrieve and display relevant information.
 
-![diagram](./cool-root-doc-22.svg)
+```mermaid
+graph TD
+    deployer["Deployer (Wallet)"] --> UiIncentiveDataProviderV3["UiIncentiveDataProviderV3 (SC)"]
+    deployer --> UiPoolDataProviderV3["UiPoolDataProviderV3 (SC)"]
+
+    UiPoolDataProviderV3 --> ChainlinkAggregatorProxy["Chainlink Aggregator Proxy (SC)"]
+    UiPoolDataProviderV3 --> ChainlinkEthUsdAggregatorProxy["Chainlink ETH/USD Aggregator Proxy (SC)"]
+```
 
 1. The script first checks if the chainlinkAggregatorProxy configuration exists for the current network. If it does not, it skips the deployment.
 2. Deploys the UiIncentiveDataProviderV3
@@ -435,7 +777,24 @@ This script is focused on deploying two key utility contracts: UiIncentiveDataPr
 
 This script is designed to deploy several ParaSwap adapters in the Aave protocol. ParaSwap is a decentralized exchange (DEX) aggregator, and these adapters facilitate interactions between Aave and ParaSwap, enabling functionalities like liquidity swaps, repayments, and withdrawals directly through Aave's platform.
 
-![diagram](./cool-root-doc-23.svg)
+```mermaid
+graph TD
+    deployer["Deployer (Wallet)"] --> ParaSwapLiquiditySwapAdapter["ParaSwapLiquiditySwapAdapter (SC)"]
+    deployer --> ParaSwapRepayAdapter["ParaSwapRepayAdapter (SC)"]
+    deployer --> ParaSwapWithdrawSwapAdapter["ParaSwapWithdrawSwapAdapter (SC)"]
+
+    ParaSwapLiquiditySwapAdapter --> addressesProvider["PoolAddressesProvider (SC)"]
+    ParaSwapLiquiditySwapAdapter --> paraswapAugustusRegistry["ParaSwap Registry (Address)"]
+    ParaSwapLiquiditySwapAdapter --> poolAdmin["Pool Admin / Governance Bridge Executor (Address)"]
+
+    ParaSwapRepayAdapter --> addressesProvider
+    ParaSwapRepayAdapter --> paraswapAugustusRegistry
+    ParaSwapRepayAdapter --> poolAdmin
+
+    ParaSwapWithdrawSwapAdapter --> addressesProvider
+    ParaSwapWithdrawSwapAdapter --> paraswapAugustusRegistry
+    ParaSwapWithdrawSwapAdapter --> poolAdmin
+```
 
 Config:
 
